@@ -1,0 +1,79 @@
+  
+---
+- hosts: server_a
+  become: true
+  tasks:
+
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
+          - python3-setuptools
+          - virtualenv
+          - python3-docker
+          
+        state: latest
+        update_cache: true
+
+
+    - name: Install docker-compose python package
+      ansible.builtin.pip:
+        name: docker-compose
+
+    - name: Copy files
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+         - { src: 'containerd.io_1.6.8-1_amd64.deb', dest: '/tmp' }
+         - { src: 'docker-ce_20.10.20~3-0~ubuntu-jammy_amd64.deb', dest: '/tmp' }
+         - { src: 'docker-ce-cli_20.10.20~3-0~ubuntu-jammy_amd64.deb', dest: '/tmp' }
+         - { src: 'docker-compose-plugin_2.11.2~ubuntu-jammy_amd64.deb', dest: '/tmp' }
+         
+# Устанавливаем пакеты по 1
+    - name: Install containerd
+      ansible.builtin.apt:
+        deb: /tmp/containerd.io_1.6.8-1_amd64.deb
+        state: present
+    
+    - name: Install docker-ce
+      ansible.builtin.apt:
+        deb: /tmp/docker-ce_20.10.20~3-0~ubuntu-jammy_amd64.deb
+        state: present
+    
+    - name: Install docker-ce-cli
+      ansible.builtin.apt:
+        deb: /tmp/docker-ce-cli_20.10.20~3-0~ubuntu-jammy_amd64.deb
+      ignore_errors: yes
+
+    - name: Install docker-compose-plugin
+      ansible.builtin.apt:
+        deb: /tmp/docker-compose-plugin_2.11.2~ubuntu-jammy_amd64.deb
+      ignore_errors: yes
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: /ai
+        state: directory
+        mode: '0755'
+
+    - name: Copy files
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+         - { src: 'docker-compose.yml', dest: '/ai/docker-compose.yml' }
+         - { src: 'Dockerfile', dest: '/ai/Dockerfile' }
+         - { src: 'spring-boot-with-metrics', dest: '/ai/spring-boot-with-metrics' }
+
+    - name: docker-compose up
+      docker_compose:
+       project_src: /ai/spring-boot-with-metrics
+       build: yes
+      register: output
+
+
+ 
+
+

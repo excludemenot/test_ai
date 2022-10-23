@@ -1,0 +1,5 @@
+[dev_server]
+
+server_a ansible_host=89.208.231.141 ansible_user=ubuntu ansible_ssh_private_key_file=./afk
+server_b ansible_host=109.120.183.199 ansible_user=ubuntu ansible_ssh_private_key_file=./afk
+test_server ansible_host=89.208.198.230 ansible_user=ubuntu ansible_ssh_private_key_file=./afk
